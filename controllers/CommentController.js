@@ -15,6 +15,22 @@ exports.createComment = async (req, res) => {
     });
 
     // save comment into the database
-    await comment.save();
-  } catch (error) {}
+    const savedComment = await comment.save();
+    // find the post by id and add the new comment to the post
+    const updatedPost = await Post.findByIdAndUpdate(
+      post,
+      { $push: { comments: savedComment._id } },
+      { new: true }
+    )
+      .populate("comments") // populate the comments array with comment documents
+      .exec();
+    // send the updated post as a response
+    res.json({
+      post: updatedPost,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      error: "Error While creating comment",
+    });
+  }
 };
